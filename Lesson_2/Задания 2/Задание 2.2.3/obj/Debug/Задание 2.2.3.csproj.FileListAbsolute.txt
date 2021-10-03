@@ -1,0 +1,6 @@
+D:\alex\projects\Plarium C#\Lesson 2\Задания 2\Задание 2.2.3\bin\Debug\Задание 2.2.3.exe.config
+D:\alex\projects\Plarium C#\Lesson 2\Задания 2\Задание 2.2.3\bin\Debug\Задание 2.2.3.exe
+D:\alex\projects\Plarium C#\Lesson 2\Задания 2\Задание 2.2.3\bin\Debug\Задание 2.2.3.pdb
+D:\alex\projects\Plarium C#\Lesson 2\Задания 2\Задание 2.2.3\obj\Debug\Задание 2.2.3.csproj.CoreCompileInputs.cache
+D:\alex\projects\Plarium C#\Lesson 2\Задания 2\Задание 2.2.3\obj\Debug\Задание 2.2.3.exe
+D:\alex\projects\Plarium C#\Lesson 2\Задания 2\Задание 2.2.3\obj\Debug\Задание 2.2.3.pdb
