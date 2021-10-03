@@ -1,1 +1,3 @@
-"C# Basics from Plarium" 
+-- Oleksii Boiarskyi --
+
+C# Basics from Plarium
