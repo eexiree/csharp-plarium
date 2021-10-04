@@ -8,7 +8,6 @@
 // меньшие n, квадрат суммы цифр которых равен m.
 
 using System;
-using System.Collections.Generic;
 
 namespace Task_2_2_3
 {
@@ -37,14 +36,15 @@ namespace Task_2_2_3
 
         private static byte[] DecomposeNumber(uint number)  // Метод разбиения числа на составляющие цифры
         {
-            List<byte> decomposedValue = new List<byte>();
+            byte[] decomposedValue = new byte[number.ToString().Length];
+            int i = 0;
             while (number > 0)
             {
-                decomposedValue.Add((byte)(number % 10));
+                decomposedValue[i] = (byte)(number % 10);
                 number /= 10;
+                ++i;
             }
-            decomposedValue.Reverse();
-            return decomposedValue.ToArray();
+            return decomposedValue;
         }
 
         private static uint SquareSum(byte[] decomposedNumber)  // Метод, который вычисляет квадрат суммы цифр, из которого состоит число

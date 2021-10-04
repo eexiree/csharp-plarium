@@ -9,7 +9,6 @@
 // а само число делится на b?
 
 using System;
-using System.Collections.Generic;
 
 namespace Task_2_2_2 {
 
@@ -44,13 +43,15 @@ namespace Task_2_2_2 {
         }
 
         private static byte[] DecomposeValue(uint value) {  // Метод разбиения числа на состовляющие его цифры
-            List<byte> decomposedValue = new List<byte>();  // Возможно нельзя использовать список, но это самый короткий вариант,
-            while (value > 0) {                             // который я придумал
-                decomposedValue.Add((byte)(value % 10));
+            byte[] decomposedValue = new byte[value.ToString().Length];
+            int i = 0;
+            while (value > 0)
+            {
+                decomposedValue[i] = (byte)(value % 10);
                 value /= 10;
+                ++i;
             }
-            decomposedValue.Reverse();                      // Инверсируем список для получения правильного порядка цифр числа
-            return decomposedValue.ToArray();               // Возвращаем массив цифр, полученого через метод копирования элементов из списка
+            return decomposedValue;     // Возвращаем массив цифр, полученого через метод копирования элементов из списка
         }
 
     }
