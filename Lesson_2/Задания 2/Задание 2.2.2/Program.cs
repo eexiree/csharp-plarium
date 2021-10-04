@@ -51,7 +51,7 @@ namespace Task_2_2_2 {
                 value /= 10;
                 ++i;
             }
-            return decomposedValue;     // Возвращаем массив цифр, полученого через метод копирования элементов из списка
+            return decomposedValue;     // Возвращаем массив цифр
         }
 
     }
