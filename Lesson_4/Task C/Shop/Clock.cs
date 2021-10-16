@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Clock_Shop
+﻿namespace Clock_Shop
 {
     public class Clock
     {
-        public string Brand
+        public string Brand     // Свойства, присвоение значений которым, возможна только в конструкторе (в данном случае) из-за приватного сеттера
         {
             get;
             private set;
@@ -34,7 +28,7 @@ namespace Clock_Shop
             private set;
         }
 
-        public Clock(string brand, ClockType type, decimal cost, int amount, Producer details)
+        public Clock(string brand, ClockType type, decimal cost, int amount, Producer details)  // Конструктор
         {
             Brand = brand;
             Type = type;
@@ -43,13 +37,13 @@ namespace Clock_Shop
             Details = details;
         }
 
-        public override string ToString()
+        public override string ToString()   // Переопределенный метод преобразования типа в строку
         {
             return $"\n-------------------\nБренд: {Brand}\nТип: {Type}\nЦена: {Cost}\nКол-во в магазине: {Amount}\n\nРеквизиты производителя: {Details}\n-------------------\n";
         }
     }
 
-    public enum ClockType 
+    public enum ClockType   // Перечисление типа часов
     {
         Quartz, Mechanical
     }

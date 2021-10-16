@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Clock_Shop
+﻿namespace Clock_Shop
 {
-    public class Producer
+    public class Producer   // Класс производителя, в котором хранится информация названия производителя и страны производства
     {
         public string Name
         {

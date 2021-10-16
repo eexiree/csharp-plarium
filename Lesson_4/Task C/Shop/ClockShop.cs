@@ -5,7 +5,7 @@ namespace Clock_Shop
 {
     public static class ClockShop
     {
-        private static Clock[] _clocks = 
+        private static Clock[] _clocks = // Массива типа часов, в котором хранится информация о часах в магазине
         {
             new Clock("Kallista", ClockType.Quartz, 11000000, 1, new Producer("Vacheron Constantin", "Швейцария")),
             new Clock("Watch", ClockType.Mechanical, 50000, 7, new Producer("Breguet", "Швейцария")),
@@ -17,7 +17,7 @@ namespace Clock_Shop
             new Clock("Jaragar Elite", ClockType.Mechanical, 110, 18, new Producer("Jaragar", "КНР"))
         };
 
-        public static List<string> AvailableCountries(bool output = false)
+        public static List<string> AvailableCountries(bool output = false)  // Метод, который предоставляет список стран для выбора (По условиям задачи есть пункт, в котором необходимо вывести часы, изготовленные в определенной стране)
         {
             List<string> availableCountries = new List<string>();
             string country;
@@ -25,7 +25,7 @@ namespace Clock_Shop
             foreach(var clock in _clocks)
             {
                 country = clock.Details.Country;
-                if (availableCountries.Contains(country))
+                if (availableCountries.Contains(country))   // Если страна уже есть в списке, не добавляем её заново
                     continue;
                 else
                 {
@@ -40,7 +40,7 @@ namespace Clock_Shop
             return availableCountries;
         }
 
-        public static void BrandByClockType(ClockType type)
+        public static void BrandByClockType(ClockType type) // Метод который выводит бренды часов по их типу
         {
             foreach(var clock in _clocks)
             {
@@ -51,7 +51,7 @@ namespace Clock_Shop
             }
         }
 
-        public static void MechanicalClocksInfo(decimal cost)
+        public static void MechanicalClocksInfo(decimal cost)   // Метод который выводит информацию о механических часах
         {
             foreach(var clock in _clocks)
             {
@@ -62,7 +62,7 @@ namespace Clock_Shop
             }
         }
 
-        public static void BrandByCountry(string country)
+        public static void BrandByCountry(string country)   // Метод который выводит бренды часов по их стране изготовления 
         {
             foreach(var clock in _clocks)
             {
@@ -73,7 +73,7 @@ namespace Clock_Shop
             }
         }
 
-        public static void ProducersByTotalCost(decimal totalCost)
+        public static void ProducersByTotalCost(decimal totalCost)  // Метод который выводит информацию о производителях, по суммарной стоймости часов в магазине
         {
             foreach(var clock in _clocks)
             {

@@ -43,9 +43,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Clock.cs" />
-    <Compile Include="ClockShop.cs" />
-    <Compile Include="Producer.cs" />
+    <Compile Include="Shop\Clock.cs" />
+    <Compile Include="Shop\ClockShop.cs" />
+    <Compile Include="Shop\Producer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
