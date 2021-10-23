@@ -67,6 +67,8 @@ namespace Task_B.Organizations
                 else return 0;
             });
         }
+
+        
     
         // Метод для рассчета общей вместимости самолетов компании
         public int TotalCapacity()

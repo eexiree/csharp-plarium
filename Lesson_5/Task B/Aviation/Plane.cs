@@ -2,11 +2,11 @@
 
 namespace Task_B.Aviation
 {
-    public abstract class Plane // Абстрактный класс, который описывает общие характеристики самолёта
+    public abstract class Plane : IFlying // Абстрактный класс, который описывает общие характеристики самолёта и реализует интерфейс IFlying
     {
         #region Fields
 
-        protected Random rng = new Random((int)DateTime.Now.Ticks); // Генератор псевдослучайных чисел, который используется в методах симуляции посадки и взлета самолета (Военный - посадка и взлет на случайной базе и полосе; Гражданский - запрашивает разрешение посадки и взлета на случайной полосе у случайного диспетчера по номеру)
+        protected Random rng = new Random((int)DateTime.Now.Ticks); 
 
         // Свойство имени самолета
         public string Name
@@ -62,6 +62,8 @@ namespace Task_B.Aviation
         }
 
         // Переопределенный метод преобразования типа в тип строки
+
+
         public override string ToString()
         {
             return $"Aircraft {ID}" +
@@ -71,5 +73,9 @@ namespace Task_B.Aviation
                    $"\n{"Flight range".PadRight(25, '.')}{FlightRange} miles" +
                    $"\n{"Fuel consumption".PadRight(25, '.')}{FuelConsumption} liters per 100 miles\n";
         }
+
+        // Абстрактные методы интерфейса IFlying, которые необходимо реализовать в классах наследниках
+        public abstract void TakeOff();
+        public abstract void Land();
     }
 }

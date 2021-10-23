@@ -3,7 +3,7 @@
 namespace Task_B.Aviation
 {
     // Абстрактный класс, который описывает военный тип самолетов
-    public abstract class MilitaryPlane : Plane, IFlying
+    public abstract class MilitaryPlane : Plane
     {
         protected MilitaryPlane(string name, int capacity, int carryingCapacity, int flightRange, int fuelConsumption) :
                   base(name, capacity, carryingCapacity, flightRange, fuelConsumption)
@@ -13,14 +13,14 @@ namespace Task_B.Aviation
 
 
 
-        // Реализованный метод взлета интерфейса IFlying
-        public void TakeOff()
+        // Переопределенный метод взлета интерфейса IFlying
+        public override void TakeOff()
         {
             Console.WriteLine($"Base {rng.Next() % 1000}, we're taking off in 3..2..1");
         }
 
-        // Реализованный метод посадки интерфейса IFlying
-        public void Land()
+        // Переопределенный метод посадки интерфейса IFlying
+        public override void Land()
         {
             Console.WriteLine($"Base {rng.Next() % 1000}, we're landing on {rng.Next() % 10}th landing strip");
         }
