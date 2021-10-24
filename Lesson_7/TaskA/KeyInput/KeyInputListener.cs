@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace KeyInputListeners
+namespace Handlers
 {
     public class KeyEventArgs : EventArgs   // Класс, который хранит введеный символ
     {
