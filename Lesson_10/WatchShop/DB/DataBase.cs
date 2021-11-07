@@ -162,49 +162,34 @@ namespace WatchShop.DB
             }
         }
 
-
-
-        //public static void ChangeFieldValue(string shop, string brand, Fields field, object value)
-        //{
-        //    StringBuilder rewrited = new StringBuilder();
-        //    using (DB.sr = new StreamReader(DB.file.OpenRead()))
-        //    {
-        //        string line;
-        //        bool isShopFind = false, isBrandFind = false;
-        //        while (!DB.sr.EndOfStream)
-        //        {
-        //            line = DB.sr.ReadLine();
-        //            if (line.Contains(shop))
-        //                isShopFind = true;
-        //            else if (line.Contains(brand) && isShopFind)
-        //                isBrandFind = true;
-        //            else if (line.Contains(field.ToString()) && isBrandFind)
-        //            {
-        //                rewrited.Append(line.GetField() + value.ToString() + Environment.NewLine);
-        //                isShopFind = isBrandFind = false;
-        //                continue;
-        //            }
-        //            rewrited.Append(line + Environment.NewLine);
-        //        }
-        //    }
-        //    using (DB.sw = DB.file.CreateText())
-        //    {
-        //        DB.sw.Write(rewrited);
-        //    }
-        //}
-
-        //public static void SerializeNonSaved(Shop shop)
-        //{
-        //    FileInfo jsonFile = new FileInfo(Path.Combine(_DBDir.FullName, shop.Name + ".json"));
-        //    using (StreamWriter jsonWriter = jsonFile.CreateText())
-        //    {
-        //        jsonWriter.WriteAsync(JsonSerializer.Serialize(shop));
-        //        using (HaveToBeRestored.sw = HaveToBeRestored.file.AppendText())
-        //        {
-        //            HaveToBeRestored.sw.WriteAsync(jsonFile.Name + Environment.NewLine);
-        //        }
-        //    }
-        //}
+        public static void ChangeFieldValue(string shop, string brand, Fields field, object value)
+        {
+            StringBuilder rewrited = new StringBuilder();
+            using (DB.sr = new StreamReader(DB.file.OpenRead()))
+            {
+                string line;
+                bool isShopFind = false, isBrandFind = false;
+                while (!DB.sr.EndOfStream)
+                {
+                    line = DB.sr.ReadLine();
+                    if (line.Contains(shop))
+                        isShopFind = true;
+                    else if (line.Contains(brand) && isShopFind)
+                        isBrandFind = true;
+                    else if (line.Contains(field.ToString()) && isBrandFind)
+                    {
+                        rewrited.Append(line.GetField() + value.ToString() + Environment.NewLine);
+                        isShopFind = isBrandFind = false;
+                        continue;
+                    }
+                    rewrited.Append(line + Environment.NewLine);
+                }
+            }
+            using (DB.sw = DB.file.CreateText())
+            {
+                DB.sw.Write(rewrited);
+            }
+        }
 
         #region Backups
 
