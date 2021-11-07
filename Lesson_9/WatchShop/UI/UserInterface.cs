@@ -220,7 +220,7 @@ namespace WatchShop.UI
                     new Page(CapturedShopOperations);
                 })));
 
-            Page cpShopsPage = new Page(cpShops);
+            new Page(cpShops);
         }
 
         private static void ShowAssortment()
@@ -458,6 +458,7 @@ namespace WatchShop.UI
                 Console.ReadKey();
                 return;
             }
+            Console.WriteLine("Exchange was successfuly done");
 
             void ExchangePage(Dictionary<string, Action> actions, string action)
             {

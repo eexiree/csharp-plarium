@@ -111,7 +111,6 @@ namespace WatchShop
         #endregion
 
         public IEnumerator GetEnumerator() => _watches.GetEnumerator();
-
         public Watch this[int index] => _watches[index];
     }
 }

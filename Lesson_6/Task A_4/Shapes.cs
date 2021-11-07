@@ -2,7 +2,7 @@
 
 namespace Task_A_4
 {
-    public class Cell
+    public class Cell : IComparable
     {
         // [0] - top left
         // [1] - top right
@@ -39,6 +39,11 @@ namespace Task_A_4
             return $"Cell {CellID}:\n{"Top Left:".PadLeft(padding, '.')}\t{vertices[0]}\n{"Top Right:".PadLeft(padding, '.')}\t{vertices[1]}\n{"Bottom Left:".PadLeft(padding, '.')}\t{vertices[2]}\n{"Bottom Right:".PadLeft(padding, '.')}\t{vertices[3]}";
         }
 
+        public int CompareTo(object obj)
+        {
+            Cell other = obj as Cell;
+
+        }
     }
 
     public class Circle
