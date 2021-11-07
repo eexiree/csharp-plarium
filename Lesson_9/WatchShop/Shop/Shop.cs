@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text.Json;
+using WatchShop.Args;
 
 namespace WatchShop
 {
@@ -22,7 +21,7 @@ namespace WatchShop
             set;
         }
 
-        public Assortment _assortment;
+        private Assortment _assortment;
         public Assortment Assortment
         {
             get => _assortment;
@@ -75,81 +74,67 @@ namespace WatchShop
 
         public void AssortmentByCost()
         {
-            SortEventArgs arg = new SortEventArgs();
-            arg.Comparison = (Watch a, Watch b) =>
+            SortEventArgs arg = new SortEventArgs((Watch a, Watch b) => 
             {
                 if (a.Cost > b.Cost)
                     return 1;
                 else if (a.Cost < b.Cost)
                     return -1;
                 else return 0;
-            };
+            });
             orderBy?.Invoke(this, arg);
         }
 
         public void AssortmentByType()
         {
-            SortEventArgs arg = new SortEventArgs();
-            arg.Comparison = (Watch a, Watch b) =>
+            SortEventArgs arg = new SortEventArgs((Watch a, Watch b) =>
             {
                 if (a.Type > b.Type)
                     return 1;
                 else if (a.Type < b.Type)
                     return -1;
                 else return 0;
-            };
+            });
             orderBy?.Invoke(this, arg);
         }
 
         public void AssortmentByAmount()
         {
-            SortEventArgs arg = new SortEventArgs()
-            {
-                Comparison = (Watch a, Watch b) =>
-                {
-                    if (a.Amount > b.Amount)
-                        return 1;
-                    else if (a.Amount < b.Amount)
-                        return -1;
-                    else return 0;
-                }
-            };
+            SortEventArgs arg = new SortEventArgs((Watch a, Watch b) =>
+            { 
+                if (a.Amount > b.Amount)
+                    return 1;
+                else if (a.Amount < b.Amount)
+                    return -1;
+                else return 0;
+            });
             orderBy?.Invoke(this, arg);
         }
 
         public void AssortmentByCountry()
         {
-            SortEventArgs arg = new SortEventArgs()
+            SortEventArgs arg = new SortEventArgs((Watch a, Watch b) =>
             {
-                Comparison = (Watch a, Watch b) =>
-                {
                     return String.Compare(a.ProducerData.Country, b.ProducerData.Country);
-                }
-            };
+            });
             orderBy?.Invoke(this, arg);
         }
 
         public void AssortmentByProducer()
         {
-            SortEventArgs arg = new SortEventArgs()
+            SortEventArgs arg = new SortEventArgs((Watch a, Watch b) =>
             {
-                Comparison = (Watch a, Watch b) =>
-                {
-                    return String.Compare(a.ProducerData.Name, b.ProducerData.Name);
-                }
-            };
+                return String.Compare(a.ProducerData.Name, b.ProducerData.Name);
+            });
             orderBy?.Invoke(this, arg);
         }
 
         public void AssortmentByBrand()
         {
-            SortEventArgs arg = new SortEventArgs()
+            SortEventArgs arg = new SortEventArgs((Watch a, Watch b) =>
             {
-                Comparison = (Watch a, Watch b) =>
-                {
-                    return String.Compare(a.Brand, b.Brand);
-                }
-            };
+                return String.Compare(a.Brand, b.Brand);
+            });
             orderBy?.Invoke(this, arg);
         }
 
@@ -197,28 +182,5 @@ namespace WatchShop
             return $"Shop".PadRight(18, '.') + Name +
                    $"{nl}Money".PadRight(20, '.') + Money + nl + Assortment;
         }
-
-        [Serializable]
-        public class ShopToJson
-        {
-            public string Name
-            {
-                get;
-                set;
-            }
-            public decimal Money
-            {
-                get;
-                set;
-            }
-            public List<Watch> Watches;// = new List<Watch>();
-
-            public ShopToJson(string name, decimal money, ICollection<Watch> collection)
-            {
-                Name = name;
-                Money = money;
-                Watches = new List<Watch>(collection);
-            }
-        } 
     }
 }

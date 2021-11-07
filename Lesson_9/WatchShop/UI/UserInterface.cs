@@ -4,6 +4,7 @@ using System.Linq;
 using System.IO;
 using System.Runtime.InteropServices;
 using WatchShop.DB;
+using WatchShop.Args;
 
 namespace WatchShop.UI
 {
@@ -27,6 +28,8 @@ namespace WatchShop.UI
         private static Dictionary<string, Action> DataBasePage = new Dictionary<string, Action>
         {
             ["Create shop"]         = CreateShop,
+            ["Save shop"]           = SaveShop,
+            ["Save shops"]          = SaveShops,
             ["Capture shop"]        = CaptureShop,
             ["Capture shops"]       = CaptureShops,
             ["Reset"]               = Reset,
@@ -36,10 +39,11 @@ namespace WatchShop.UI
 
         private static Dictionary<string, Action> CapturedShopOperations = new Dictionary<string, Action>
         {
-            ["Show Assortment"]     = ShowAssortment,
             ["Add watch"]           = AddWatch,
+            ["Show Assortment"]     = ShowAssortment,
             ["Find specific items"] = () => new Page(FindSpecificItem),
-            ["Ordering"]            = () => new Page(Ordering)
+            ["Ordering"]            = () => new Page(Ordering),
+            ["Exchange"]            = MakeExchange
         };
 
         private static Dictionary<string, Action> FindSpecificItem = new Dictionary<string, Action>
@@ -52,12 +56,30 @@ namespace WatchShop.UI
 
         private static Dictionary<string, Action> Ordering = new Dictionary<string, Action>
         {
-            ["Order by brand"]          = AssortmentByBrand,
-            ["Order by type"]           = AssortmentByType,
-            ["Order by cost"]           = AssortmentByCost,
-            ["Order by amount"]         = AssortmentByAmount,
-            ["Order by producer name"]  = AssortmentByProducer,
-            ["Order by country"]        = AssortmentByCountry
+            ["Order by brand"] = () => {
+                capturedShop.AssortmentByBrand();
+                OrderedAssortmentBy("brand");
+            },
+            ["Order by type"] = () => {
+                capturedShop.AssortmentByType();
+                OrderedAssortmentBy("type");
+            },
+            ["Order by cost"] = () => {
+                capturedShop.AssortmentByCost();
+                OrderedAssortmentBy("cost");
+            },
+            ["Order by amount"] = () => {
+                capturedShop.AssortmentByAmount();
+                OrderedAssortmentBy("amount");
+            },
+            ["Order by producer name"] = () => {
+                capturedShop.AssortmentByProducer();
+                OrderedAssortmentBy("producer name");
+            },
+            ["Order by country"] = () => {
+                capturedShop.AssortmentByCountry();
+                OrderedAssortmentBy("country");
+            }
         };
 
         #endregion
@@ -71,6 +93,7 @@ namespace WatchShop.UI
                 capturedShops.AddRange(backups);
 
             Page mainPage = new Page(MainPage);
+            DataBase.BackupShops(capturedShops);
         }
 
         #region DataBase
@@ -88,7 +111,7 @@ namespace WatchShop.UI
                 shopName = Console.ReadLine() ?? "Unknown";
                 Console.Write("Money:\t");
                 shopMoney = Convert.ToDecimal(Console.ReadLine());
-                Console.Write("Fill randomly?\t");
+                Console.Write("Fill randomly? true / false\t");
                 shop = new Shop(shopName, shopMoney);
                 if (Convert.ToBoolean(Console.ReadLine()))
                 {
@@ -100,64 +123,61 @@ namespace WatchShop.UI
             {
                 Console.WriteLine(ex.Message + Environment.NewLine + "Press any key to go back");
                 Console.ReadKey();
+                return;
             }
             DataBase.Safe(shop);
             Console.WriteLine("The shop was created successfuly");
             Console.ReadKey();
         }
 
+        private static void SaveShop()
+        {
+            Dictionary<string, Action> saveShop = null;
+            saveShop = new Dictionary<string, Action>(
+                capturedShops.ToDictionary(shop => shop.Name, shop => new Action(() =>
+                {
+                    DataBase.Safe(shop);
+                    saveShop.Remove(shop.Name);
+                    capturedShops.Remove(shop);
+                })));
+            new Page(saveShop);
+        }
+
+        private static void SaveShops()
+        {
+            DataBase.Safe(capturedShops);
+            capturedShops.Clear();
+            Console.WriteLine("All captured shops were successfuly saved to DB");
+            Console.ReadKey();
+        }
+
         private static void CaptureShop()
         {
-            int currentLine = 0;
-            ConsoleKeyInfo keyInfo = default;
-            var shopsInDB = DataBase.GetShopsNames();
-            while (keyInfo.Key != ConsoleKey.Escape)
-            {
-                if (shopsInDB.Count is 0)
-                    return;
-                Console.Clear();
-                for (int i = 0; i < shopsInDB.Count; i++)
-                {
-                    if (currentLine == i) Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine(shopsInDB[i]);
-                    Console.ResetColor();
-                }
-                Console.WriteLine("\nEnter escape to go back\n");
-                keyInfo = Console.ReadKey();
-                switch (keyInfo.Key)
-                {
-                    case ConsoleKey.UpArrow:
-                        currentLine--;
-                        if (currentLine < 0)
-                            currentLine = shopsInDB.Count - 1;
-                        break;
-                    case ConsoleKey.DownArrow:
-                        currentLine++;
-                        if (currentLine >= shopsInDB.Count)
-                            currentLine = 0;
-                        break;
-                    case ConsoleKey.Enter:
-                        if (shopsInDB.Count > 0)
-                        {
-                            string shopName = shopsInDB[currentLine];
-                            capturedShops.Add(DataBase.ReadShopData(shopName));
-                            shopsInDB.Remove(shopName);
-                        }
-                        break;
-                }
-            }
+            Dictionary<string, Action> captureShop = null;
+            captureShop = new Dictionary<string, Action>(
+                DataBase.GetShopsNames().ToDictionary(shop => shop, shop => new Action(() => {
+                    capturedShops.Add(DataBase.ReadShopData(shop));
+                    captureShop.Remove(shop);
+                })));
+            new Page(captureShop);
         }
         
         private static void CaptureShops()
         {
             var shopsInDB = DataBase.ReadShopsData();
             if(shopsInDB is not null)
+            {
                 capturedShops.AddRange(shopsInDB);
+                Console.WriteLine("All shops were successfuly captured");
+                Console.ReadKey();
+            }
         }
 
         private static void Reset()
         {
             DataBase.ResetDataBase();
+            Console.WriteLine("Data base were successfuly reset");
+            Console.ReadKey();
         }
 
         private static void Show()
@@ -170,40 +190,13 @@ namespace WatchShop.UI
 
         private static void ShowLogs()
         {
-            int currentLine = 0;
-            ConsoleKeyInfo keyInfo = default;
-            var logs = DataBase.GetLogFiles();
-            while (keyInfo.Key != ConsoleKey.Escape)
-            {
-                Console.Clear();
-                for (int i = 0; i < logs.Length; i++)
+            Dictionary<string, Action> logs = null;
+            logs = new Dictionary<string, Action>(
+                DataBase.GetLogFiles().ToDictionary(log => log.Name, log => new Action(() =>
                 {
-                    if (currentLine == i) Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine(logs[i].Name);
-                    Console.ResetColor();
-                }
-                Console.WriteLine("\nEnter escape to go back\n");
-                keyInfo = Console.ReadKey();
-                switch (keyInfo.Key)
-                {
-                    case ConsoleKey.UpArrow:
-                        currentLine--;
-                        if (currentLine < 0)
-                            currentLine = logs.Length - 1;
-                        break;
-                    case ConsoleKey.DownArrow:
-                        currentLine++;
-                        if (currentLine >= logs.Length)
-                            currentLine = 0;
-                        break;
-                    case ConsoleKey.Enter:
-                        if (logs.Length > 0)
-                        {
-                            ShowLog(logs[currentLine].FullName);
-                        }
-                        break;
-                }
-            }
+                    ShowLog(log.FullName);
+                })));
+            new Page(logs);
         }
 
         private static void ShowLog(string path)
@@ -220,67 +213,14 @@ namespace WatchShop.UI
 
         private static void CapturedShops()
         {
-            int currentLine = 0;
-            ConsoleKeyInfo keyInfo = default;
-            List<string> shops = null;
-            if(capturedShops is not null)
-                shops = (from s in capturedShops select s.Name).ToList();
-            if (shops.Count > 0)
-                shops.Add("Save all shops");
-            else return;
-                
+            Dictionary<string, Action> cpShops = new Dictionary<string, Action>(
+                capturedShops.ToDictionary(shop => shop.Name, shop => new Action(() => 
+                {
+                    capturedShop = shop;
+                    new Page(CapturedShopOperations);
+                })));
 
-            while (keyInfo.Key != ConsoleKey.Escape)
-            {
-                Console.Clear();
-                
-                for (int i = 0; i < shops.Count; i++)
-                {
-                    if (currentLine == i) Console.ForegroundColor = ConsoleColor.Green;
-                    if (i == shops.Count - 1)
-                        Console.Write(Environment.NewLine);
-                    Console.WriteLine(shops[i]);
-                    Console.ResetColor();
-                }
-                Console.WriteLine("\nTo save the shop to DB choose it and PRESS F5");
-                Console.WriteLine("\nEnter any key to go back\n");
-                keyInfo = Console.ReadKey();
-                switch (keyInfo.Key)
-                {
-                    case ConsoleKey.UpArrow:
-                        currentLine--;
-                        if (currentLine < 0)
-                            currentLine = shops.Count - 1;
-                        break;
-                    case ConsoleKey.DownArrow:
-                        currentLine++;
-                        if (currentLine >= shops.Count)
-                            currentLine = 0;
-                        break;
-                    case ConsoleKey.F5:
-                        if(currentLine < shops.Count - 1)
-                        {
-                            DataBase.Safe(capturedShops[currentLine]);
-                            capturedShops.RemoveAt(currentLine);
-                            shops.RemoveAt(currentLine);
-                        }
-                        break;
-                    case ConsoleKey.Enter:
-                        if(currentLine == shops.Count - 1)
-                        {
-                            DataBase.Safe(capturedShops);
-                            capturedShops.Clear();
-                            shops.Clear();
-                            return;
-                        }
-                        else if (capturedShops.Count > 1 && currentLine < capturedShops.Count)
-                        {
-                            capturedShop = capturedShops[currentLine];
-                            new Page(CapturedShopOperations);
-                        }
-                        break;
-                }
-            }
+            Page cpShopsPage = new Page(cpShops);
         }
 
         private static void ShowAssortment()
@@ -358,105 +298,50 @@ namespace WatchShop.UI
 
         private static void BrandByCountry()
         {
-            int currentLine = 0;
-            ConsoleKeyInfo keyInfo = default;
-            string country = default;
-            var aCountries = capturedShop.Assortment.AvailableCountries.ToList();
-            
-            
-            while (keyInfo.Key != ConsoleKey.Enter)
-            {
-                Console.Clear();
-                Console.WriteLine("Brand by Country. Choose the country:\n");
-                for (int i = 0; i < aCountries.Count; i++)
+            Dictionary<string, Action> countries = new Dictionary<string, Action>(
+                capturedShop.Assortment.AvailableCountries.ToDictionary(country => country, country => new Action(() =>
                 {
-                    if (i == currentLine) Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine(aCountries[i]);
-                    Console.ResetColor();
-                }
-                keyInfo = Console.ReadKey();
-                switch (keyInfo.Key)
-                {
-                    case ConsoleKey.UpArrow:
-                        currentLine--;
-                        if (currentLine < 0)
-                            currentLine = aCountries.Count - 1;
-                        break;
-                    case ConsoleKey.DownArrow:
-                        currentLine++;
-                        if (currentLine >= aCountries.Count)
-                            currentLine = 0;
-                        break;
-                    case ConsoleKey.Enter:
-                        if (aCountries.Count > 0)
-                        {
-                            country = aCountries[currentLine];
-                        }
-                        else return;
-                        break;
-                }
-            }
-            foreach (var watch in capturedShop.Assortment.BrandByCountry(country))
-            {
-                Console.WriteLine("\n" + watch);
-            }
-            Console.WriteLine("\nEnter any key to go back\n");
-            Console.ReadKey();
+                    foreach (var watch in capturedShop.Assortment.BrandByCountry(country))
+                    {
+                        Console.WriteLine(watch);
+                    }
+                    Console.WriteLine("\nEnter any key to go back\n");
+                    Console.ReadKey();
+                })));
+            new Page(countries);
         }
 
         private static void BrandByType()
         {
-            ConsoleKeyInfo keyInfo = default;
-            int type = 0;
-            while (keyInfo.Key != ConsoleKey.Enter)
+            void ShowBrandsByType(WatchType type)
             {
-                Console.Clear();
-                Console.WriteLine("Brand by type. Choose the type:\n");
-                if (type == 0)
+                Console.WriteLine();
+                foreach (var brand in capturedShop.Assortment.BrandByType(type))
                 {
-                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine(brand);
                 }
-                Console.Write("Quartz\t");
-                Console.ResetColor();
-                if (type == 1)
-                {
-                    Console.ForegroundColor = ConsoleColor.Green;
-                }
-                Console.Write("Mechanical");
-                Console.ResetColor();
-                keyInfo = Console.ReadKey();
-                switch (keyInfo.Key)
-                {
-                    case ConsoleKey.LeftArrow:
-                        if (type == 0)
-                            type = 1;
-                        else type = 0;
-                        break;
-                    case ConsoleKey.RightArrow:
-                        if (type == 1)
-                            type = 0;
-                        else type = 1;
-                        break;
-                }
-            }
-            Console.WriteLine();
-            foreach (var brand in capturedShop.Assortment.BrandByType((WatchType)type))
+                Console.WriteLine("\nEnter any key to go back\n");
+                Console.ReadKey();
+            };
+
+            Dictionary<string, Action> types = new Dictionary<string, Action>()
             {
-                Console.WriteLine("\n" + brand);
-            }
-            Console.WriteLine("\nEnter any key to go back\n");
-            Console.ReadKey();
+                ["Quartz"]      = () => ShowBrandsByType(WatchType.Quartz),
+                ["Mechanical"]  = () => ShowBrandsByType(WatchType.Mechanical)
+            };
+
+            new Page(types);
         }
 
         private static void MechWatchesByCostRange()
         {
             decimal cost;
             Console.Clear();
-            Console.WriteLine("Mechanical watches by cost range. Enter the cost:\n");
+            Console.Write("Enter the cost:\t");
             while (decimal.TryParse(Console.ReadLine(), out cost) == false);
             foreach (var item in capturedShop.Assortment.MechWatchesByCostRange(cost))
             {
-                Console.WriteLine("\n" + item);
+                Console.WriteLine(item);
             }
             Console.WriteLine("\nEnter any key to go back\n");
             Console.ReadKey();
@@ -466,11 +351,11 @@ namespace WatchShop.UI
         {
             decimal cost;
             Console.Clear();
-            Console.WriteLine("Producers, which watches cost is less than... Enter the cost:\n");
+            Console.WriteLine("Enter the maximum cost:\n");
             while (decimal.TryParse(Console.ReadLine(), out cost) == false);
             foreach (var item in capturedShop.Assortment.ProducersByTotalCost(cost))
             {
-                Console.WriteLine("\n" + item);
+                Console.WriteLine(item);
             }
             Console.WriteLine("\nEnter any key to go back\n");
             Console.ReadKey();
@@ -480,34 +365,10 @@ namespace WatchShop.UI
 
         #region Ordering
 
-        private static void AssortmentByBrand()
+        private static void OrderedAssortmentBy(string byWhat)
         {
-            capturedShop.AssortmentByBrand();
-        }
-
-        private static void AssortmentByType()
-        {
-            capturedShop.AssortmentByType();
-        }
-
-        private static void AssortmentByCost()
-        {
-            capturedShop.AssortmentByCost();
-        }
-
-        private static void AssortmentByAmount()
-        {
-            capturedShop.AssortmentByAmount();
-        }
-
-        private static void AssortmentByProducer()
-        {
-            capturedShop.AssortmentByProducer();
-        }
-            
-        private static void AssortmentByCountry()
-        {
-            capturedShop.AssortmentByCountry();
+            Console.WriteLine($"Assortment were successfuly ordered by {byWhat}");
+            Console.ReadKey();
         }
 
         #endregion
@@ -532,5 +393,107 @@ namespace WatchShop.UI
         }
 
         #endregion
+
+        private static void MakeExchange()
+        {
+            Shop buyer = capturedShop;
+            Shop seller = null;
+            Watch watch = null;
+            int amount;
+
+            Dictionary<string, Action> sellers = new Dictionary<string, Action>
+                (capturedShops.Where(shop => shop != buyer)
+                              .Select(shop => shop)
+                              .ToDictionary(shop => shop.Name, shop => new Action(() =>
+                              {
+                                  seller = shop;
+                              })));
+            if(sellers.Count <= 0)
+            {
+                Console.WriteLine("There aren't any captured shops to make exchange");
+                Console.ReadKey();
+                return;
+            }
+            ExchangePage(sellers, "Choose the seller");
+            if(seller is null)
+            {
+                Console.WriteLine("Undefined seller");
+                Console.ReadKey();
+                return;
+            }
+
+
+            Dictionary<string, Action> watches = new Dictionary<string, Action>
+                (seller.Assortment.Watches.ToDictionary(w => w.Brand, w => new Action(() =>
+                {
+                    watch = w;
+                })));
+            if (watches.Count <= 0)
+            {
+                Console.WriteLine("There aren't any watches in the seller shop to make exchange");
+                Console.ReadKey();
+                return;
+            }
+            ExchangePage(watches, "Choose the watch to exchange");
+            if(watch is null)
+            {
+                Console.WriteLine("Undefined watches");
+                Console.ReadKey();
+                return;
+            }
+
+            Console.Clear();
+            Console.WriteLine($"Enter the amount of watches to buy. Permissible value: {watch.Amount}");
+            while (int.TryParse(Console.ReadLine(), out amount) == false);
+
+
+            ExchangeEventArgs args = new ExchangeEventArgs(seller, buyer, watch, amount);
+            try
+            {
+                Agent.MakeTransaction(buyer, args);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.ReadKey();
+                return;
+            }
+
+            void ExchangePage(Dictionary<string, Action> actions, string action)
+            {
+                int currentLine = 0;
+                ConsoleKeyInfo keyInfo = default;
+                while (true)
+                {
+                    Console.Clear();
+                    Console.WriteLine(action);
+                    for (int i = 0; i < actions.Count; i++)
+                    {
+                        if (currentLine == i) Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine(actions.ElementAt(i).Key);
+                        Console.ResetColor();
+                    }
+                    keyInfo = Console.ReadKey();
+                    switch (keyInfo.Key)
+                    {
+                        case ConsoleKey.UpArrow:
+                            currentLine--;
+                            if (currentLine < 0)
+                                currentLine = actions.Count - 1;
+                            break;
+                        case ConsoleKey.DownArrow:
+                            currentLine++;
+                            if (currentLine >= actions.Count)
+                                currentLine = 0;
+                            break;
+                        case ConsoleKey.Enter:
+                            if (currentLine >= 0 && currentLine < actions.Count)
+                                actions?.ElementAt(currentLine).Value?.Invoke();
+                            return;
+                    }
+                }
+            }
+
+        }
     }
 }

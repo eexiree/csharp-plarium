@@ -13,18 +13,56 @@ namespace WatchShop.UI
             Init(actions);
         }
 
+        //private void Init(Dictionary<string, Action> actions)
+        //{
+        //    int currentLine = 0;
+        //    ConsoleKeyInfo keyInfo = default;
+        //    var keys = actions.Keys.ToArray();
+        //    while (true)
+        //    {
+        //        Console.Clear();
+        //        for (int i = 0; i < keys.Length; i++)
+        //        {
+        //            if (currentLine == i) Console.ForegroundColor = ConsoleColor.Green;
+        //            Console.WriteLine(keys[i]);
+        //            Console.ResetColor();
+        //        }
+        //        Console.WriteLine("\nEnter escape to go back\n");
+        //        keyInfo = Console.ReadKey();
+        //        switch (keyInfo.Key)
+        //        {
+        //            case ConsoleKey.UpArrow:
+        //                currentLine--;
+        //                if (currentLine < 0)
+        //                    currentLine = keys.Length - 1;
+        //                break;
+        //            case ConsoleKey.DownArrow:
+        //                currentLine++;
+        //                if (currentLine >= keys.Length)
+        //                    currentLine = 0;
+        //                break;
+        //            case ConsoleKey.Enter:
+        //                //if(actions.Count > 0)
+        //                    actions[keys?[currentLine]]?.Invoke();
+        //                break;
+        //            case ConsoleKey.Escape:
+        //                Console.Clear();
+        //                return;
+        //        }
+        //    }
+        //}
+
         private void Init(Dictionary<string, Action> actions)
         {
             int currentLine = 0;
             ConsoleKeyInfo keyInfo = default;
-            var keys = actions.Keys.ToArray();
             while (true)
             {
                 Console.Clear();
-                for (int i = 0; i < keys.Length; i++)
+                for (int i = 0; i < actions.Count; i++)
                 {
                     if (currentLine == i) Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine(keys[i]);
+                    Console.WriteLine(actions.ElementAt(i).Key);
                     Console.ResetColor();
                 }
                 Console.WriteLine("\nEnter escape to go back\n");
@@ -34,16 +72,16 @@ namespace WatchShop.UI
                     case ConsoleKey.UpArrow:
                         currentLine--;
                         if (currentLine < 0)
-                            currentLine = keys.Length - 1;
+                            currentLine = actions.Count - 1;
                         break;
                     case ConsoleKey.DownArrow:
                         currentLine++;
-                        if (currentLine >= keys.Length)
+                        if (currentLine >= actions.Count)
                             currentLine = 0;
                         break;
                     case ConsoleKey.Enter:
-                        if(actions.Count > 0)
-                            actions[keys[currentLine]].Invoke();
+                        if(currentLine >= 0 && currentLine < actions.Count)
+                            actions?.ElementAt(currentLine).Value?.Invoke();
                         break;
                     case ConsoleKey.Escape:
                         Console.Clear();

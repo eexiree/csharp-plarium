@@ -1,4 +1,5 @@
 ﻿using System;
+using WatchShop.Args;
 
 namespace WatchShop
 {
@@ -8,7 +9,7 @@ namespace WatchShop
 
         private static event ExchangeEventHandler OnExchange;
 
-        public static void Exchange(object sender, ExchangeEventArgs args)
+        public static void MakeTransaction(object sender, ExchangeEventArgs args)
         {
             if (args.Watch == null)
                 throw new NullReferenceException("Watch were null");
@@ -28,6 +29,11 @@ namespace WatchShop
             else if (args.Seller.Assortment[args.Watch.Brand]?.Amount < args.Amount)
                 throw new ArgumentException("Not enough watches");
 
+            else Exchange(sender, args);
+        }
+
+        private static void Exchange(object sender, ExchangeEventArgs args)
+        {
             OnExchange?.Invoke(sender, args);
         }
 
