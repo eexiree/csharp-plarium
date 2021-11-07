@@ -156,32 +156,12 @@ namespace WatchShop
         #endregion
 
         #region Tasks Methods
-
-        public IEnumerable BrandByType(WatchType type) => from watch in _watches where watch.Type == type select watch.Brand;
-        
-        public IEnumerable MechWatchesByCostRange(decimal max) => from watch in _watches where watch.Type == WatchType.Mechanical && watch.Cost < max select watch;
-        
-        public IEnumerable BrandByCountry(string country)
-        {
-            if (IsCountryAvailable(country))
-                return from watch in _watches where watch.ProducerData.Country == country select watch.Brand;
-            else return null;
-        }
-        
-        public IEnumerable ProducersByTotalCost(decimal totalCost)
-        {
-            foreach (var prod in Producers())
-            {
-                decimal cost = 0;
-                foreach (var watch in _watches)
-                {
-                    if (watch.ProducerData.Name == prod)
-                        cost += watch.Amount * watch.Cost;
-                }
-                if (cost <= totalCost)
-                    yield return prod;
-            }
-        }
+        public IEnumerable BrandByType(WatchType type) => _watches.Where(watch => watch.Type == type).Select(watch => watch.Brand);
+        public IEnumerable MechWatchesByCostRange(decimal max) => _watches.Where(watch => watch.Type == WatchType.Mechanical && watch.Cost < max);
+        public IEnumerable BrandByCountry(string country) => _watches.Where(watch => watch.ProducerData.Country == country)
+                                                                     .Select(watch => watch.Brand);
+        public IEnumerable ProducersByTotalCost(decimal totalCost) => _watches.Where(watch => (watch.Cost * watch.Amount) <= totalCost)
+                                                                              .Select(watch => watch.ProducerData.Name);
 
         #endregion
 
