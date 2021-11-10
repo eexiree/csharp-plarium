@@ -23,18 +23,8 @@ namespace WatchShop
                 _watches = value;
             }
         }
+        public IEnumerable<string> AvailableCountries => _watches.Select(watch => watch.ProducerData.Country).Distinct();   // Страны производителей часов
 
-        private HashSet<string> _availableCountries = new HashSet<string>();    // Хеш-сет, который хранит страны производителей, исходя из коллекции часов 
-        public HashSet<string> AvailableCountries
-        {
-            get => _availableCountries;
-            set
-            {
-                _availableCountries = value;
-            }
-        }
-        public bool IsCountryAvailable(string country) => _availableCountries.Contains(country);
-        
         public Action<object, LogEventArgs> Handler = DataBase.OnLogRequest;
 
         #endregion
@@ -62,19 +52,18 @@ namespace WatchShop
 
         public void Add(Watch watch)
         {
-            _watches.Add(watch);
+            if (Contains(watch.Brand))
+                this[watch.Brand].Amount += watch.Amount;
+            else
+                _watches.Add(watch);
 
             OnRequest(new LogEventArgs("Add", watch, true, DateTime.Now));
         }
 
         public void AddRange(IEnumerable<Watch> watchCollection)
         {
-            _watches.AddRange(watchCollection);
-
-            foreach (var w in watchCollection)
-                _availableCountries.Add(w.ProducerData.Country);
-
-            OnRequest(new LogEventArgs("AddRange", watchCollection, true, DateTime.Now));
+            foreach (var watch in watchCollection)
+                Add(watch);
         }
 
         public bool Remove(Watch watch)
@@ -128,7 +117,6 @@ namespace WatchShop
                 }
                     
                 _watches.Add(watch);
-                _availableCountries.Add(watch.ProducerData.Country);
             }
             OnRequest(new LogEventArgs("FillIn", amount, isSuccessful, DateTime.Now));
         }
@@ -142,6 +130,8 @@ namespace WatchShop
             }
             catch(Exception ex)
             {
+                Console.WriteLine(ex.Message);
+                Console.ReadKey();
                 isSuccessful = false;
             }
 
@@ -177,16 +167,6 @@ namespace WatchShop
             return output.ToString();
         }
 
-        private List<string> Producers()
-        {
-            HashSet<string> prods = new HashSet<string>();
-            foreach (var watch in _watches)
-            {
-                prods.Add(watch.ProducerData.Name);
-            }
-            return prods.ToList();
-        }
-
         #endregion
 
         #region Indexers & Enumerator
@@ -208,7 +188,7 @@ namespace WatchShop
             get
             {
                 if (Contains(brand))
-                    return new Watch(_watches[IndexOf(brand)]);
+                    return this[IndexOf(brand)];
                 else return null;
             }
         }

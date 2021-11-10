@@ -27,23 +27,25 @@ namespace WatchShop.UI
 
         private static Dictionary<string, Action> DataBasePage = new Dictionary<string, Action>
         {
-            ["Create shop"]         = CreateShop,
+            ["Create shop\n"]       = CreateShop,
             ["Save shop"]           = SaveShop,
-            ["Save shops"]          = SaveShops,
+            ["Save shops\n"]        = SaveShops,
             ["Capture shop"]        = CaptureShop,
-            ["Capture shops"]       = CaptureShops,
+            ["Capture shops\n"]     = CaptureShops,
             ["Reset"]               = Reset,
-            ["Show"]                = Show,
-            ["Show Logs"]           = ShowLogs
+            ["Show\n"]              = Show,
+            ["Show Logs\n"]         = ShowLogs,
+            ["Make change"]         = ChangeValue
         };
 
         private static Dictionary<string, Action> CapturedShopOperations = new Dictionary<string, Action>
         {
             ["Add watch"]           = AddWatch,
+            ["Remove watch\n"]      = RemoveWatch,
             ["Show Assortment"]     = ShowAssortment,
             ["Find specific items"] = () => new Page(FindSpecificItem),
-            ["Ordering"]            = () => new Page(Ordering),
-            ["Exchange"]            = MakeExchange
+            ["Ordering\n"]          = () => new Page(Ordering),
+            ["Exchange"]            = MakeExchange,
         };
 
         private static Dictionary<string, Action> FindSpecificItem = new Dictionary<string, Action>
@@ -207,6 +209,53 @@ namespace WatchShop.UI
             Console.ReadKey();
         }
 
+        private static void ChangeValue()
+        {
+            string[] lines = DataBase.GetDBData.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+            int currentLine = 0;
+            ConsoleKeyInfo keyInfo = default;
+            while (keyInfo.Key != ConsoleKey.Escape)
+            {
+                Console.Clear();
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    if (currentLine == i) Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine(lines[i]);
+                    Console.ResetColor();
+                }
+                Console.WriteLine("\nEnter escape to go back\n");
+                keyInfo = Console.ReadKey();
+                switch (keyInfo.Key)
+                {
+                    case ConsoleKey.UpArrow:
+                        currentLine--;
+                        if (currentLine < 0)
+                            currentLine = lines.Length - 1;
+                        break;
+                    case ConsoleKey.DownArrow:
+                        currentLine++;
+                        if (currentLine >= lines.Length)
+                            currentLine = 0;
+                        break;
+                    case ConsoleKey.Enter:
+                        if (currentLine >= 0 && currentLine < lines.Length)
+                        {
+                            Console.SetCursorPosition(0, currentLine);
+                            Console.Write(new string(' ', Console.BufferWidth));
+                            Console.SetCursorPosition(0, currentLine);
+                            Console.ForegroundColor = ConsoleColor.DarkGreen;
+                            Console.Write(lines[currentLine].Substring(0, 18));
+                            Console.SetCursorPosition(18, currentLine);
+                            lines[currentLine] = lines[currentLine].Substring(0, 18) + Console.ReadLine();
+                            Console.ResetColor();
+                            DataBase.Rewrite(string.Join(Environment.NewLine, lines));
+                        }
+                        break;
+                }
+            }
+        }
+
         #endregion
 
         #region Captured Shops
@@ -292,6 +341,18 @@ namespace WatchShop.UI
                 Console.ReadKey();
                 return;
             }
+        }
+
+        private static void RemoveWatch()
+        {
+            Dictionary<string, Action> removeWatchPage = null;
+            removeWatchPage = new Dictionary<string, Action>
+                (capturedShop.Assortment.Watches.ToDictionary(watch => watch.Brand, watch => new Action(() =>
+                {
+                    removeWatchPage.Remove(watch.Brand);
+                    capturedShop.Assortment.Remove(watch);
+                })));
+            new Page(removeWatchPage);
         }
 
         #region Find specific item
@@ -396,46 +457,69 @@ namespace WatchShop.UI
 
         private static void MakeExchange()
         {
-            Shop buyer = capturedShop;
+            string nl = Environment.NewLine;
+
+            bool isBuyer = false;
+            Shop buyer  = null;
             Shop seller = null;
             Watch watch = null;
             int amount;
 
-            Dictionary<string, Action> sellers = new Dictionary<string, Action>
-                (capturedShops.Where(shop => shop != buyer)
-                              .Select(shop => shop)
-                              .ToDictionary(shop => shop.Name, shop => new Action(() =>
-                              {
-                                  seller = shop;
-                              })));
-            if(sellers.Count <= 0)
+            Dictionary<string, Action> sellOrBuyPage = new Dictionary<string, Action>()
+            {
+                ["\nBuy"] = () => {
+                    buyer = capturedShop;
+                    isBuyer = true;
+                },
+                ["Sell\n"] = () => seller = capturedShop
+            };
+            ExchangePage(sellOrBuyPage, "Choose the operation");
+
+
+            Dictionary<string, Action> selectionPage = new Dictionary<string, Action>
+            (capturedShops.Where(shop => isBuyer ? shop != buyer : shop != seller)
+                            .Select(shop => shop)
+                            .ToDictionary(shop => shop.Name, shop => new Action(() =>
+                            {
+                                if (isBuyer)
+                                    seller = shop;
+                                else
+                                    buyer = shop;
+                            })));
+            if (selectionPage.Count <= 0)
             {
                 Console.WriteLine("There aren't any captured shops to make exchange");
                 Console.ReadKey();
                 return;
             }
-            ExchangePage(sellers, "Choose the seller");
-            if(seller is null)
+            ExchangePage(selectionPage, isBuyer ? "Choose the seller" : "Choose the buyer");
+            if (seller is null)
             {
                 Console.WriteLine("Undefined seller");
                 Console.ReadKey();
                 return;
             }
 
+#if DEBUG_SESSION
+            Console.WriteLine($"Seller: {seller.Name}{Environment.NewLine}Buyer: {buyer.Name}");
+            Console.ReadKey();
+#endif
 
             Dictionary<string, Action> watches = new Dictionary<string, Action>
-                (seller.Assortment.Watches.ToDictionary(w => w.Brand, w => new Action(() =>
-                {
-                    watch = w;
-                })));
+                (seller.Assortment.Watches.ToDictionary(
+                    w => $"{nl}{w.Brand}{nl}{w.Cost}", 
+                    w => new Action(() =>
+                    {
+                        watch = w;
+                    })));
             if (watches.Count <= 0)
             {
                 Console.WriteLine("There aren't any watches in the seller shop to make exchange");
                 Console.ReadKey();
                 return;
             }
-            ExchangePage(watches, "Choose the watch to exchange");
-            if(watch is null)
+            ExchangePage(watches, $"Choose the watch to {(isBuyer ? "buy" : "sell")}");
+            if (watch is null)
             {
                 Console.WriteLine("Undefined watches");
                 Console.ReadKey();
@@ -443,8 +527,8 @@ namespace WatchShop.UI
             }
 
             Console.Clear();
-            Console.WriteLine($"Enter the amount of watches to buy. Permissible value: {watch.Amount}");
-            while (int.TryParse(Console.ReadLine(), out amount) == false);
+            Console.WriteLine($"Enter the amount of watches to {(isBuyer ? "buy" : "sell")}. Permissible value: {watch.Amount}");
+            while (int.TryParse(Console.ReadLine(), out amount) == false && amount > watch.Amount);
 
 
             ExchangeEventArgs args = new ExchangeEventArgs(seller, buyer, watch, amount);
@@ -452,22 +536,23 @@ namespace WatchShop.UI
             {
                 Agent.MakeTransaction(buyer, args);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
                 Console.ReadKey();
                 return;
             }
             Console.WriteLine("Exchange was successfuly done");
+            Console.ReadKey();
 
-            void ExchangePage(Dictionary<string, Action> actions, string action)
+            void ExchangePage(Dictionary<string, Action> actions, string upperText)
             {
                 int currentLine = 0;
                 ConsoleKeyInfo keyInfo = default;
                 while (true)
                 {
                     Console.Clear();
-                    Console.WriteLine(action);
+                    Console.WriteLine(upperText);
                     for (int i = 0; i < actions.Count; i++)
                     {
                         if (currentLine == i) Console.ForegroundColor = ConsoleColor.Green;

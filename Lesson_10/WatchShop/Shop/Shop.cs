@@ -8,7 +8,7 @@ namespace WatchShop
 
         #region Fields
 
-        private SortEventHandler orderBy;
+        private SortEventHandler _orderBy;
 
         public string Name
         {
@@ -33,7 +33,7 @@ namespace WatchShop
 
         #endregion
 
-        #region Constructor
+        #region Constructors
 
         public Shop(string name, int assortmentAmount, decimal money)
         {
@@ -43,20 +43,29 @@ namespace WatchShop
             Money = money;
             Assortment.FillIn(assortmentAmount);
 
-            
-
-            orderBy = new SortEventHandler(Assortment.OrderBy);
+            _orderBy = new SortEventHandler(Assortment.OrderBy);
             Agent.Subsribe(AgentListener);
         }
 
         public Shop(string name, decimal money)
         {
+            _assortment = new Assortment();
+
             Name = name;
             Money = money;
 
-            _assortment = new Assortment();
+            _orderBy = new SortEventHandler(Assortment.OrderBy);
+            Agent.Subsribe(AgentListener);
+        }
 
-            orderBy = new SortEventHandler(Assortment.OrderBy);
+        public Shop(Shop other)
+        {
+            _assortment = other.Assortment;
+
+            Name = other.Name;
+            Money = other.Money;
+
+            _orderBy = new SortEventHandler(Assortment.OrderBy);
             Agent.Subsribe(AgentListener);
         }
 
@@ -64,7 +73,7 @@ namespace WatchShop
         {
             _assortment = new Assortment();
 
-            orderBy = new SortEventHandler(Assortment.OrderBy);
+            _orderBy = new SortEventHandler(Assortment.OrderBy);
             Agent.Subsribe(AgentListener);
         }
 
@@ -82,20 +91,20 @@ namespace WatchShop
                     return -1;
                 else return 0;
             });
-            orderBy?.Invoke(this, arg);
+            _orderBy?.Invoke(this, arg);
         }
 
         public void AssortmentByType()
         {
             SortEventArgs arg = new SortEventArgs((Watch a, Watch b) =>
             {
-                if (a.Type > b.Type)
+                if ((int)a.Type > (int)b.Type)
                     return 1;
-                else if (a.Type < b.Type)
+                else if ((int)a.Type < (int)b.Type)
                     return -1;
                 else return 0;
             });
-            orderBy?.Invoke(this, arg);
+            _orderBy?.Invoke(this, arg);
         }
 
         public void AssortmentByAmount()
@@ -108,7 +117,7 @@ namespace WatchShop
                     return -1;
                 else return 0;
             });
-            orderBy?.Invoke(this, arg);
+            _orderBy?.Invoke(this, arg);
         }
 
         public void AssortmentByCountry()
@@ -117,7 +126,7 @@ namespace WatchShop
             {
                     return String.Compare(a.ProducerData.Country, b.ProducerData.Country);
             });
-            orderBy?.Invoke(this, arg);
+            _orderBy?.Invoke(this, arg);
         }
 
         public void AssortmentByProducer()
@@ -126,7 +135,7 @@ namespace WatchShop
             {
                 return String.Compare(a.ProducerData.Name, b.ProducerData.Name);
             });
-            orderBy?.Invoke(this, arg);
+            _orderBy?.Invoke(this, arg);
         }
 
         public void AssortmentByBrand()
@@ -135,7 +144,7 @@ namespace WatchShop
             {
                 return String.Compare(a.Brand, b.Brand);
             });
-            orderBy?.Invoke(this, arg);
+            _orderBy?.Invoke(this, arg);
         }
 
         #endregion
@@ -145,13 +154,9 @@ namespace WatchShop
         private void AgentListener(object sender, ExchangeEventArgs args)
         {   
             if(args.Buyer == this)
-            {
                 Buy(args);
-            }
             else if(args.Seller == this)
-            {
                 Sell(args);
-            }
         }
 
         private void Buy(ExchangeEventArgs args)
@@ -162,10 +167,15 @@ namespace WatchShop
 
         private void Sell(ExchangeEventArgs args)
         {
-            Watch temp = Assortment[Assortment.IndexOf(args.Watch.Brand)];
-            if (temp.Amount <= 0)
+            Watch temp = Assortment[args.Watch.Brand];
+            if (temp.Amount - args.Amount < 0)
+                throw new ArgumentException("Not enough watches");
+            else
+                temp.Amount -= args.Amount;
+
+            if (temp.Amount is 0)
                 Assortment.Remove(temp);
-            temp.Amount -= args.Amount;
+            
             args.Buyer.Assortment.Add(new Watch(temp) { Amount = args.Amount });
         }
 
