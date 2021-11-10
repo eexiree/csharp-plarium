@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.IO;
 using System.Text.Json;
+using System.IO;
 using WatchShop.Args;
 
 
@@ -12,6 +12,8 @@ namespace WatchShop.DB
 
     public static class DataBase
     {
+        #region Fields
+
         public static readonly string nl = Environment.NewLine;
 
         public static readonly string PathDB = Path.Combine(Environment.CurrentDirectory, "DataBase");
@@ -28,7 +30,7 @@ namespace WatchShop.DB
 
         private static bool IsDirExists(string path) => Directory.Exists(path);
 
-        public static string GetDBData => File.ReadAllText(DB.file.FullName);
+        #endregion
 
         static DataBase()
         {
@@ -40,7 +42,7 @@ namespace WatchShop.DB
 
             DB.file = new FileInfo(Path.Combine(PathDB, "DB.dat"));
             if (!DB.file.Exists)
-                using (DB.sw = DB.file.CreateText()) ;
+                using (DB.sw = DB.file.CreateText());
 
             Log.file = new FileInfo(Path.Combine(PathLog, createdTime.ToString().Replace(':', '.') + ".log"));
             using (Log.sw = Log.file.CreateText())
@@ -49,6 +51,7 @@ namespace WatchShop.DB
             }
         }
 
+        public static string GetDBData => File.ReadAllText(DB.file.FullName);
         private static DirectoryInfo CreateDirIfNotExists(string path) =>
             IsDirExists(path) ? new DirectoryInfo(path) : Directory.CreateDirectory(path);
 
@@ -162,33 +165,14 @@ namespace WatchShop.DB
             }
         }
 
-        public static void ChangeFieldValue(string shop, string brand, Fields field, object value)
+        public static void Rewrite(string str)
         {
-            StringBuilder rewrited = new StringBuilder();
-            using (DB.sr = new StreamReader(DB.file.OpenRead()))
-            {
-                string line;
-                bool isShopFind = false, isBrandFind = false;
-                while (!DB.sr.EndOfStream)
-                {
-                    line = DB.sr.ReadLine();
-                    if (line.Contains(shop))
-                        isShopFind = true;
-                    else if (line.Contains(brand) && isShopFind)
-                        isBrandFind = true;
-                    else if (line.Contains(field.ToString()) && isBrandFind)
-                    {
-                        rewrited.Append(line.GetField() + value.ToString() + Environment.NewLine);
-                        isShopFind = isBrandFind = false;
-                        continue;
-                    }
-                    rewrited.Append(line + Environment.NewLine);
-                }
-            }
             using (DB.sw = DB.file.CreateText())
             {
-                DB.sw.Write(rewrited);
+                DB.sw.Write(str);
             }
+            var shops = ReadShopsData();
+            Safe(shops, false);
         }
 
         #region Backups
@@ -218,8 +202,7 @@ namespace WatchShop.DB
                 foreach (var jsonFile in BackupsDirectory.GetFiles())
                 {
                     string jsonString = File.ReadAllText(jsonFile.FullName);
-                    Shop shop = JsonSerializer.Deserialize<Shop>(jsonString);
-                    shops.Add(shop);
+                    shops.Add(new Shop(JsonSerializer.Deserialize<Shop>(jsonString)));
                     jsonFile.Delete();
                 }
                 return shops;
